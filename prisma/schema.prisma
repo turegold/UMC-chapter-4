@@ -15,19 +15,19 @@ datasource db {
 }
 
 model User {
-  phone_number       String        @id @db.VarChar(15)
-  name               String        @db.VarChar(10)
-  nickname           String        @db.VarChar(20)
-  gender             Gender
-  birthday           String        @db.VarChar(20)
-  address            String        @db.VarChar(80)
-  total_point        BigInt        @default(0)
-  location_agreement Boolean       @default(false)
-  alarm_agreement    Boolean       @default(false)
-  created_time       DateTime      @default(now()) @db.Timestamp(6)
-  updated_time       DateTime      @updatedAt @db.Timestamp(6)
-  UserMission        UserMission[]
-  Review             Review[]
+  phoneNumber       String        @id @map("phone_number") @db.VarChar(15)
+  name              String        @db.VarChar(10)
+  nickname          String        @db.VarChar(20)
+  gender            Gender
+  birthday          String        @db.VarChar(20)
+  address           String        @db.VarChar(80)
+  totalPoint        BigInt        @default(0) @map("total_point")
+  locationAgreement Boolean       @default(false) @map("location_agreement")
+  alarmAgreement    Boolean       @default(false) @map("alarm_agreement")
+  createdTime       DateTime      @default(now()) @map("created_time") @db.Timestamp(6)
+  updatedTime       DateTime      @default(now()) @updatedAt @map("updated_time") @db.Timestamp(6)
+  UserMission       UserMission[]
+  Review            Review[]
 }
 
 enum Gender {
@@ -80,7 +80,7 @@ model UserMission {
   updatedTime     DateTime         @default(now()) @map("updated_time")
 
   //Relations
-  user    User     @relation(fields: [userPhoneNumber], references: [phone_number])
+  user    User     @relation(fields: [userPhoneNumber], references: [phoneNumber])
   store   Store    @relation(fields: [storeId], references: [id])
   mission Mission  @relation(fields: [missionId], references: [id])
   Review  Review[]
@@ -105,7 +105,7 @@ model Review {
   updatedTime     DateTime @default(now()) @map("updated_time")
 
   // Relations
-  user        User        @relation(fields: [userPhoneNumber], references: [phone_number])
+  user        User        @relation(fields: [userPhoneNumber], references: [phoneNumber])
   store       Store       @relation(fields: [storeId], references: [id])
   userMission UserMission @relation(fields: [userMissionId], references: [id])
 

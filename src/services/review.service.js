@@ -1,4 +1,7 @@
-import { insertReviewtoDB, getReviewfromDB, getAllStoreReviews, } from "../repositories/review.repository.js";
+import {
+    insertReviewtoDB, getReviewfromDB, getAllStoreReviews,
+    getUserReviews
+} from "../repositories/review.repository.js";
 import { responseFromReviews } from "../dtos/review.dto.js";
 // 리뷰 리스트 불러오는 기능 구현
 export const listStoreReviews = async (store_id, cursor) => {
@@ -13,6 +16,15 @@ export const listStoreReviews = async (store_id, cursor) => {
         console.log("lastId:", lastId);
     }
     return responseFromReviews(reviews);
+}
+
+// 특정 유저의 리뷰들을 불러오는 기능 구현
+export const listUserReviews = async (user_phone_number, cursor) => {
+    console.log("특정 유저의 리뷰들 불러오기");
+    const user_reviews = await getUserReviews(user_phone_number, cursor);
+    console.log("불러온 유저 리뷰 데이터: ", user_reviews);
+
+    return responseFromReviews(user_reviews);
 }
 
 // 리뷰 추가 기능 구현
@@ -32,3 +44,4 @@ export const addReview = async (body) => {
     const review = await getReviewfromDB(joinReviewID);
     return review;
 }
+
