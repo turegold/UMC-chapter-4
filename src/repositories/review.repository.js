@@ -1,11 +1,16 @@
 import { prisma } from "../db.config.js";
-
+import { NonExistentStoreError, NonExistentUserError } from "../errors.js";
 // 리뷰 추가하기
 export const insertReviewtoDB = async (data) => {
-    const existing = await prisma.store.findFirst({ where: { id: data.store_id } });
-    if (!existing) {
-        throw new Error("존재하지 않는 가게입니다.");
+    const existing_store = await prisma.store.findFirst({ where: { id: data.store_id } });
+    const existing_user = await prisma.user.findFirst({ where: { phone_number: data.user_phone_number } });
+    if (!existing_store) {
+        throw new NonExistentStoreError("존재하지 않는 가게입니다.");
     }
+    if (!existing_user) {
+        throw new NonExistentUserError("존재하지 않는 유저입니다.");
+    }
+    console.log("data ", data);
     const created = await prisma.review.create({
         data: {
             userMissionId: data.user_mission_id.toString(),
@@ -20,6 +25,10 @@ export const insertReviewtoDB = async (data) => {
 
 // 모든 리뷰 정보 얻기
 export const getAllStoreReviews = async (store_id, cursor) => {
+    const existing_store = await prisma.store.findFirst({ where: { id: store_id } });
+    if (!existing_store) {
+        throw new NonExistentStoreError("존재하지 않는 가게입니다.");
+    }
     const parsedCursor = cursor ? BigInt(cursor) : BigInt(0);
     console.log("parsedCursor:", parsedCursor)
     const reviews = await prisma.review.findMany({
@@ -46,6 +55,10 @@ export const getAllStoreReviews = async (store_id, cursor) => {
 
 // 특정 유저 리뷰 불러오기
 export const getUserReviews = async (user_phone_number, cursor) => {
+    const existing_user = await prisma.user.findFirst({ where: { phone_number: user_phone_number } });
+    if (!existing_user) {
+        throw new NonExistentStoreError("존재하지 않는 유저입니다.");
+    }
     const parsedCursor = cursor ? BigInt(cursor) : BigInt(0);
     console.log("parsedCursor:", parsedCursor)
     console.log("user_phone_number:", user_phone_number);

@@ -8,11 +8,11 @@ export const handlerAddStore = async (req, res, next) => {
     console.log("body:", req.body);
 
     const store = await addStore(req.body);
-    res.status(StatusCodes.OK).json({ result: store });
+    res.status(StatusCodes.OK).success(store);
 }
 
 export const handlerGetStore = async (req, res, next) => {
     console.log("가게 정보를 불러옵니다.");
     const store = await getStorefromDB(req.params.storeID);
-    res.status(StatusCodes.OK).json({ result: store });
+    res.status(StatusCodes.OK).success(store);
 }

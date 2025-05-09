@@ -9,13 +9,13 @@ export const handlerGetReviews = async (req, res, next) => {
     console.log("req.params:", req.params);
     console.log("req.query:", req.query);
     const reviews = await listStoreReviews(storeId, cursor);
-    res.status(StatusCodes.OK).json(reviews);
+    res.status(StatusCodes.OK).success(reviews);
 }
 
 export const handlerAddReview = async (req, res, next) => {
     console.log("리뷰를 추가합니다.");
     const review = await addReview(req.body);
-    res.status(StatusCodes.OK).json({ result: review });
+    res.status(StatusCodes.OK).success(review);
 }
 
 export const handlerGetUserReviews = async (req, res, next) => {
@@ -25,5 +25,5 @@ export const handlerGetUserReviews = async (req, res, next) => {
     console.log("req.params:", req.params);
     console.log("req.query:", req.query);
     const user_reviews = await listUserReviews(user_phone_number, cursor);
-    res.status(StatusCodes.OK).json(user_reviews);
+    res.status(StatusCodes.OK).success(user_reviews);
 }

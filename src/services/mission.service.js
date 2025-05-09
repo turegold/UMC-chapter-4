@@ -20,9 +20,6 @@ export const addMission = async (body) => {
         minimum_price: body.minimum_price,
     })
 
-    if (joinMissionID === null) {
-        throw new Error("존재하지 않는 가게입니다.");
-    }
 
     const mission = await getMissionfromDB(joinMissionID);
     return mission;
@@ -40,17 +37,14 @@ export const addUserMission = async (body) => {
         review_written: 0,
     })
 
-    if (joinUserMissionID === null) {
-        throw new Error("존재하지 않는 가게입니다.");
-    }
 
     const mission = await getuserMissionfromDB(joinUserMissionID);
     return mission;
 }
 
-export const listStoreMissions = async (store_mission_id, cursor) => {
+export const listStoreMissions = async (storeId, cursor) => {
     console.log("특정 가게 미션들 불러오기")
-    const store_missions = await getStoreMissions(store_mission_id, cursor);
+    const store_missions = await getStoreMissions(storeId, cursor);
     console.log("불러온 가게 미션 데이터:", store_missions);
     return responseFromMissions(store_missions);
 }

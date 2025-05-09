@@ -1,10 +1,13 @@
 import { prisma } from "../db.config.js";
-
+import {
+    NonExistentStoreError, ExistentUserMissionError, NonExistentUserError
+    , InvalidUserMissionError
+} from "../errors.js";
 // 미션 추가하기
 export const insertMissiontoDB = async (data) => {
     const store = await prisma.store.findFirst({ where: { id: data.store_id } });
     if (!store) {
-        return null;
+        throw new NonExistentStoreError("존재하지 않는 가게입니다.");
     }
     console.log("data:", data);
     const created = await prisma.mission.create({
@@ -35,14 +38,18 @@ export const getMissionfromDB = async (missionId) => {
 
 // 미션 도전하기
 export const insertUserMissiontoDB = async (data) => {
-    const existing = await prisma.userMission.findFirst({
+    const store = await prisma.store.findFirst({ where: { id: data.store_id } });
+    if (!store) {
+        throw new NonExistentStoreError("존재하지 않는 가게입니다.");
+    }
+    const existing_mission = await prisma.userMission.findFirst({
         where: {
             userPhoneNumber: data.user_phone_number,
             missionId: data.mission_id.toString(),
         },
     });
-    if (existing) {
-        throw new Error("이미 도전하고 있는 미션입니다.");
+    if (existing_mission) {
+        throw new ExistentUserMissionError("이미 도전하고 있는 미션입니다.");
     }
     const created = await prisma.userMission.create({
         data: {
@@ -73,10 +80,14 @@ export const getuserMissionfromDB = async (user_missionId) => {
 };
 
 // 특정 가게의 미션들을 불러오기
-export const getStoreMissions = async (store_mission_id, cursor) => {
+export const getStoreMissions = async (storeId, cursor) => {
+    const existing = await prisma.store.findFirst({ where: { id: storeId } });
+    if (!existing) {
+        throw new NonExistentStoreError("존재하지 않는 가게입니다.");
+    }
     const parsedCursor = cursor ? BigInt(cursor) : BigInt(0);
     console.log("parsedCursor:", parsedCursor);
-    console.log(store_mission_id);
+    console.log(storeId);
     const missions = await prisma.mission.findMany({
         select: {
             id: true,
@@ -87,7 +98,7 @@ export const getStoreMissions = async (store_mission_id, cursor) => {
             minimumPrice: true,
         },
         where: {
-            storeId: BigInt(store_mission_id),
+            storeId: BigInt(storeId),
             id: { gt: parsedCursor }
         },
         orderBy: { id: "asc" },
@@ -99,6 +110,10 @@ export const getStoreMissions = async (store_mission_id, cursor) => {
 
 // 특정 유저의 진행중인 미션을 불러오기
 export const getUserMissions = async (user_phone_number, cursor) => {
+    const existing = await prisma.user.findFirst({ where: { phone_number: user_phone_number } });
+    if (!existing) {
+        throw new NonExistentUserError("존재하지 않는 유저입니다.");
+    }
     const parsedCursor = cursor ? BigInt(cursor) : BigInt(0);
     const missions = await prisma.userMission.findMany({
         select: {
@@ -121,9 +136,10 @@ export const getUserMissions = async (user_phone_number, cursor) => {
 
 export const PatchUserMisson = async (user_missionId) => {
     const user_mission = await prisma.userMission.findFirst({ where: { id: BigInt(user_missionId) } });
-    if (!user_mission) {
-        throw new Error("유효하지 않은 상태입니다.");
+    if (user_mission.state === 'completed') {
+        throw new InvalidUserMissionError("이미 도전중인 미션입니다.");
     }
+
     const updated = await prisma.userMission.update({
         where: { id: BigInt(user_missionId) },
         data: { state: "completed" }

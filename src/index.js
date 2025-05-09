@@ -16,6 +16,23 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT;
 
+// 공통 응답을 사용할 수 있는 헬퍼 함수
+app.use((req, res, next) => {
+  res.success = (success) => {
+    return res.json({ resultType: "SUCCESS", error: null, success });
+  };
+
+  res.error = ({ errorCode = "unkown", reason = null, data = null }) => {
+    return res.json({
+      resultType: "FAIL",
+      error: { errorCode, reason, data },
+      success: null,
+    });
+  };
+
+  next();
+});
+
 app.use(cors());                            // cors 방식 허용
 app.use(express.static('public'));          // 정적 파일 접근
 app.use(express.json());                    // request의 본문을 json으로 해석할 수 있도록 함 (JSON 형태의 요청 body를 파싱하기 위함)
@@ -35,6 +52,20 @@ app.post("/api/usermissions", handlerAdduserMission); //미션을 도전하기 A
 app.get("/api/users/:user_phone_number/reviews", handlerGetUserReviews); //특정 유저의 리뷰들을 불러오는 API
 app.get("/api/users/:user_phone_number/missions", handlerGetUserMissions); //유저가 진행중인 미션 목록을 불러오는 API
 app.patch("/api/usermissions/:user_mission_id", handlerPatchUserMissions); //유저의 미션 상태를 완료로 변경하는 API
+
+// 전역 오류를 처리하기 위한 미들웨어
+app.use((err, req, res, next) => {
+  if (res.headerSent) {
+    return next(err);
+  }
+
+  res.status(err.statusCode || 500).error({
+    errorCode: err.errorCode || "unkown",
+    reason: err.reason || err.message || null,
+    data: err.data || null,
+  });
+});
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });

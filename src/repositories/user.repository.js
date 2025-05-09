@@ -1,5 +1,5 @@
 import { prisma, pool } from "../db.config.js";
-
+import { NonExistentStoreError } from "../errors.js";
 // 유저 데이터 삽입
 export const addUser = async (data) => {
     const user = await prisma.user.findFirst({ where: { phone_number: data.phone_number } });
@@ -13,6 +13,7 @@ export const addUser = async (data) => {
 // 가게 정보 추가하기
 export const insertStoretoDB = async (data) => {
     const store = await prisma.store.findFirst({ where: { name: data.name } });
+    console.log("data: ", data);
     if (store) {
         return null;
     }
@@ -32,7 +33,7 @@ export const insertStoretoDB = async (data) => {
 export const getStorefromDB = async (storeId) => {
     const store = await prisma.store.findFirst({ where: { id: storeId } });
     if (!store) {
-        return null;
+        throw new NonExistentStoreError("존재하지 않는 가게입니다.");
     }
     return {
         ...store,

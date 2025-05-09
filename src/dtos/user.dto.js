@@ -1,14 +1,14 @@
-export const bodyToMission = (body) => {
-    const start_time = new Date(body.start_time);
-    const end_time = new Date(body.end_time);
+export const responseFromStores = (stores) => {
+    const serialized = stores.map((m) => ({
+        ...m,
+        ownerId: m.ownerId.toString(),
+    }));
 
+    const lastId = serialized.length ? serialized[serialized.length - 1].id.toString() : null;
     return {
-        store_id: body.store_id,
-        name: body.name,
-        description: body.description,
-        reward: body.reward,
-        start_time: body.start_time,
-        end_time: body.end_time,
-        minimum_price: body.minimum_price,
-    }
-}
+        data: serialized,
+        pagination: {
+            cursor: lastId,
+        },
+    };
+};
