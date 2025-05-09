@@ -1,0 +1,113 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  phoneNumber       String        @id @map("phone_number") @db.VarChar(15)
+  name              String        @db.VarChar(10)
+  nickname          String        @db.VarChar(20)
+  gender            Gender
+  birthday          String        @db.VarChar(20)
+  address           String        @db.VarChar(80)
+  totalPoint        BigInt        @default(0) @map("total_point")
+  locationAgreement Boolean       @default(false) @map("location_agreement")
+  alarmAgreement    Boolean       @default(false) @map("alarm_agreement")
+  createdTime       DateTime      @default(now()) @map("created_time") @db.Timestamp(6)
+  updatedTime       DateTime      @default(now()) @updatedAt @map("updated_time") @db.Timestamp(6)
+  UserMission       UserMission[]
+  Review            Review[]
+}
+
+enum Gender {
+  남성
+  여성
+  미정
+}
+
+model Store {
+  id          BigInt        @id @default(autoincrement())
+  name        String        @db.VarChar(50)
+  ownerId     BigInt        @map("owner_id")
+  address     String        @db.VarChar(100)
+  phoneNumber String        @map("phone_number") @db.VarChar(15)
+  createdTime DateTime      @default(now()) @map("created_time") @db.Timestamp(6)
+  updatedTime DateTime      @default(now()) @updatedAt @map("updated_time") @db.Timestamp(6)
+  Mission     Mission[]
+  UserMission UserMission[]
+  Review      Review[]
+}
+
+model Mission {
+  id           BigInt   @id @default(autoincrement())
+  storeId      BigInt   @map("store_id")
+  name         String   @db.VarChar(50)
+  description  String   @db.VarChar(500)
+  reward       BigInt   @default(0)
+  startTime    DateTime @map("start_time") @db.Timestamp(6)
+  endTime      DateTime @default(now()) @map("end_time") @db.Timestamp(6)
+  createdTime  DateTime @default(now()) @map("created_time") @db.Timestamp(6)
+  updatedTime  DateTime @default(now()) @map("updated_time") @db.Timestamp(6)
+  minimumPrice BigInt   @map("minimum_price")
+
+  store       Store         @relation(fields: [storeId], references: [id])
+  UserMission UserMission[]
+
+  @@map("mission")
+}
+
+model UserMission {
+  id              BigInt           @id @default(autoincrement())
+  userPhoneNumber String           @map("user_phone_number") @db.VarChar(15)
+  storeId         BigInt           @map("store_id")
+  missionId       BigInt           @map("mission_id")
+  state           UserMissionState @default(not_accepted)
+  acceptedTime    DateTime?        @map("accepted_time")
+  completedTime   DateTime?        @map("completed_time")
+  reviewWritten   Boolean          @default(false) @map("review_written")
+  createdTime     DateTime         @default(now()) @map("created_time")
+  updatedTime     DateTime         @default(now()) @map("updated_time")
+
+  //Relations
+  user    User     @relation(fields: [userPhoneNumber], references: [phoneNumber])
+  store   Store    @relation(fields: [storeId], references: [id])
+  mission Mission  @relation(fields: [missionId], references: [id])
+  Review  Review[]
+
+  @@map("user_mission")
+}
+
+enum UserMissionState {
+  not_accepted
+  in_progress
+  completed
+}
+
+model Review {
+  id              BigInt   @id @default(autoincrement())
+  userMissionId   BigInt   @map("user_mission_id")
+  userPhoneNumber String   @map("user_phone_number") @db.VarChar(15)
+  storeId         BigInt   @map("store_id")
+  description     String?  @db.Text
+  rating          Float    @db.Float
+  createdTime     DateTime @default(now()) @map("created_time")
+  updatedTime     DateTime @default(now()) @map("updated_time")
+
+  // Relations
+  user        User        @relation(fields: [userPhoneNumber], references: [phoneNumber])
+  store       Store       @relation(fields: [storeId], references: [id])
+  userMission UserMission @relation(fields: [userMissionId], references: [id])
+
+  @@map("review")
+}
