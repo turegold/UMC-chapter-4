@@ -137,7 +137,7 @@ export const getUserMissions = async (user_phone_number, cursor) => {
 export const PatchUserMisson = async (user_missionId) => {
     const user_mission = await prisma.userMission.findFirst({ where: { id: BigInt(user_missionId) } });
     if (user_mission.state === 'completed') {
-        throw new InvalidUserMissionError("이미 도전중인 미션입니다.");
+        throw new InvalidUserMissionError("이미 완료한 미션입니다.");
     }
 
     const updated = await prisma.userMission.update({
