@@ -47,3 +47,23 @@ export class InvalidUserMissionError extends Error {
         this.data = data;
     }
 }
+
+export class InvalidUserInfo extends Error {
+    errorCode = "U006";
+
+    constructor(reason, data) {
+        super(reason);
+        this.reason = reason;
+        this.data = data;
+    }
+}
+
+export class InvalidUser extends Error {
+    errorCode = "U007";
+
+    constructor(reason, data) {
+        super(reason);
+        this.reason = reason;
+        this.data = data;
+    }
+}

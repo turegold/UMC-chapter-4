@@ -1,11 +1,11 @@
 import {
     insertStoretoDB,
     getStorefromDB,
-
+    patchUserInfofromDB
 
 } from "../repositories/user.repository.js"
 import { responseFromStores } from "../dtos/user.dto.js";
-import { DuplicateStoreIdError } from "../errors.js";
+import { DuplicateStoreIdError, InvalidUserInfo } from "../errors.js";
 
 // 가게 추가 기능 구현
 export const addStore = async (body) => {
@@ -24,6 +24,16 @@ export const addStore = async (body) => {
 
     const store = await getStorefromDB(joinStoreID);
     return store;
+}
+
+export const patchUserInfo = async (userData, inputData) => {
+    const email = userData.email;
+    if (!inputData.phoneNumber) {
+        throw new InvalidUserInfo("전화번호가 없습니다.", inputData.phoneNumber);
+    }
+    console.log("service에서 email:", email)
+    const updateUser = await patchUserInfofromDB(email, inputData);
+    return updateUser;
 }
 
 

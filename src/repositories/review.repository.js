@@ -55,7 +55,7 @@ export const getAllStoreReviews = async (store_id, cursor) => {
 
 // 특정 유저 리뷰 불러오기
 export const getUserReviews = async (user_phone_number, cursor) => {
-    const existing_user = await prisma.user.findFirst({ where: { phone_number: user_phone_number } });
+    const existing_user = await prisma.user.findFirst({ where: { phoneNumber: user_phone_number } });
     if (!existing_user) {
         throw new NonExistentStoreError("존재하지 않는 유저입니다.");
     }

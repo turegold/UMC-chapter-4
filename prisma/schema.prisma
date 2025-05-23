@@ -1,12 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  // output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -15,19 +8,97 @@ datasource db {
 }
 
 model User {
-  phoneNumber       String        @id @map("phone_number") @db.VarChar(15)
-  name              String        @db.VarChar(10)
-  nickname          String        @db.VarChar(20)
+  phoneNumber       String    @id @map("phone_number") @db.VarChar(15)
+  name              String    @db.VarChar(10)
+  nickname          String?   @db.VarChar(20)
   gender            Gender
-  birthday          String        @db.VarChar(20)
-  address           String        @db.VarChar(80)
-  totalPoint        BigInt        @default(0) @map("total_point")
-  locationAgreement Boolean       @default(false) @map("location_agreement")
-  alarmAgreement    Boolean       @default(false) @map("alarm_agreement")
-  createdTime       DateTime      @default(now()) @map("created_time") @db.Timestamp(6)
-  updatedTime       DateTime      @default(now()) @updatedAt @map("updated_time") @db.Timestamp(6)
-  UserMission       UserMission[]
-  Review            Review[]
+  birthday          String?   @db.VarChar(20)
+  address           String?   @db.VarChar(80)
+  totalPoint        BigInt?   @default(0) @map("total_point")
+  locationAgreement Boolean?  @default(false) @map("location_agreement")
+  alarmAgreement    Boolean?  @default(false) @map("alarm_agreement")
+  createdTime       DateTime? @default(now()) @map("created_time") @db.DateTime(6)
+  updatedTime       DateTime? @default(now()) @updatedAt @map("updated_time") @db.DateTime(6)
+  email             String?   @unique(map: "unique_email") @db.VarChar(100)
+}
+
+model Mission {
+  id           BigInt        @id @default(autoincrement())
+  storeId      BigInt        @map("store_id")
+  name         String        @db.VarChar(50)
+  description  String?       @db.VarChar(500)
+  reward       BigInt?       @default(0)
+  startTime    DateTime?     @map("start_time") @db.DateTime(6)
+  endTime      DateTime?     @map("end_time") @db.DateTime(6)
+  createdTime  DateTime?     @default(now()) @map("created_time") @db.DateTime(6)
+  updatedTime  DateTime?     @default(now()) @map("updated_time") @db.DateTime(6)
+  minimumPrice BigInt?       @map("minimum_price")
+  store        store         @relation(fields: [storeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "mission_ibfk_1")
+  UserMission  UserMission[]
+
+  @@index([storeId], map: "store_id")
+  @@map("mission")
+}
+
+model UserMission {
+  id              BigInt            @id @default(autoincrement())
+  userPhoneNumber String            @map("user_phone_number") @db.VarChar(15)
+  storeId         BigInt            @map("store_id")
+  missionId       BigInt            @map("mission_id")
+  state           UserMissionState?
+  acceptedTime    DateTime?         @map("accepted_time") @db.DateTime(6)
+  completedTime   DateTime?         @map("completed_time") @db.DateTime(6)
+  reviewWritten   Boolean?          @default(false) @map("review_written")
+  createdTime     DateTime?         @default(now()) @map("created_time") @db.DateTime(6)
+  updatedTime     DateTime?         @default(now()) @map("updated_time") @db.DateTime(6)
+  Review          Review[]
+  store           store             @relation(fields: [storeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_mission_ibfk_2")
+  mission         Mission           @relation(fields: [missionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_mission_ibfk_3")
+
+  @@index([missionId], map: "mission_id")
+  @@index([storeId], map: "store_id")
+  @@index([userPhoneNumber], map: "user_phone_number")
+  @@map("user_mission")
+}
+
+model Review {
+  id              BigInt      @id @default(autoincrement())
+  userMissionId   BigInt      @map("user_mission_id")
+  userPhoneNumber String      @map("user_phone_number") @db.VarChar(15)
+  storeId         BigInt      @map("store_id")
+  description     String?     @db.Text
+  rating          Float?      @db.Float
+  createdTime     DateTime?   @default(now()) @map("created_time") @db.DateTime(6)
+  updatedTime     DateTime?   @default(now()) @map("updated_time") @db.DateTime(6)
+  userMission     UserMission @relation(fields: [userMissionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "review_ibfk_1")
+  store           store       @relation(fields: [storeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "review_ibfk_3")
+
+  @@index([storeId], map: "store_id")
+  @@index([userMissionId], map: "user_mission_id")
+  @@index([userPhoneNumber], map: "user_phone_number")
+  @@map("review")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  sid       String   @unique
+  data      String   @db.VarChar(512)
+  expiresAt DateTime @map("expires_at")
+
+  @@map("session")
+}
+
+model store {
+  id           BigInt        @id @default(autoincrement())
+  name         String        @db.VarChar(50)
+  owner_id     BigInt
+  address      String?       @db.VarChar(100)
+  phone_number String?       @db.VarChar(15)
+  created_time DateTime?     @default(now()) @db.DateTime(6)
+  updated_time DateTime?     @default(now()) @db.DateTime(6)
+  Mission      Mission[]
+  Review       Review[]
+  UserMission  UserMission[]
 }
 
 enum Gender {
@@ -36,78 +107,8 @@ enum Gender {
   미정
 }
 
-model Store {
-  id          BigInt        @id @default(autoincrement())
-  name        String        @db.VarChar(50)
-  ownerId     BigInt        @map("owner_id")
-  address     String        @db.VarChar(100)
-  phoneNumber String        @map("phone_number") @db.VarChar(15)
-  createdTime DateTime      @default(now()) @map("created_time") @db.Timestamp(6)
-  updatedTime DateTime      @default(now()) @updatedAt @map("updated_time") @db.Timestamp(6)
-  Mission     Mission[]
-  UserMission UserMission[]
-  Review      Review[]
-}
-
-model Mission {
-  id           BigInt   @id @default(autoincrement())
-  storeId      BigInt   @map("store_id")
-  name         String   @db.VarChar(50)
-  description  String   @db.VarChar(500)
-  reward       BigInt   @default(0)
-  startTime    DateTime @map("start_time") @db.Timestamp(6)
-  endTime      DateTime @default(now()) @map("end_time") @db.Timestamp(6)
-  createdTime  DateTime @default(now()) @map("created_time") @db.Timestamp(6)
-  updatedTime  DateTime @default(now()) @map("updated_time") @db.Timestamp(6)
-  minimumPrice BigInt   @map("minimum_price")
-
-  store       Store         @relation(fields: [storeId], references: [id])
-  UserMission UserMission[]
-
-  @@map("mission")
-}
-
-model UserMission {
-  id              BigInt           @id @default(autoincrement())
-  userPhoneNumber String           @map("user_phone_number") @db.VarChar(15)
-  storeId         BigInt           @map("store_id")
-  missionId       BigInt           @map("mission_id")
-  state           UserMissionState @default(not_accepted)
-  acceptedTime    DateTime?        @map("accepted_time")
-  completedTime   DateTime?        @map("completed_time")
-  reviewWritten   Boolean          @default(false) @map("review_written")
-  createdTime     DateTime         @default(now()) @map("created_time")
-  updatedTime     DateTime         @default(now()) @map("updated_time")
-
-  //Relations
-  user    User     @relation(fields: [userPhoneNumber], references: [phoneNumber])
-  store   Store    @relation(fields: [storeId], references: [id])
-  mission Mission  @relation(fields: [missionId], references: [id])
-  Review  Review[]
-
-  @@map("user_mission")
-}
-
 enum UserMissionState {
   not_accepted
   in_progress
   completed
-}
-
-model Review {
-  id              BigInt   @id @default(autoincrement())
-  userMissionId   BigInt   @map("user_mission_id")
-  userPhoneNumber String   @map("user_phone_number") @db.VarChar(15)
-  storeId         BigInt   @map("store_id")
-  description     String?  @db.Text
-  rating          Float    @db.Float
-  createdTime     DateTime @default(now()) @map("created_time")
-  updatedTime     DateTime @default(now()) @map("updated_time")
-
-  // Relations
-  user        User        @relation(fields: [userPhoneNumber], references: [phoneNumber])
-  store       Store       @relation(fields: [storeId], references: [id])
-  userMission UserMission @relation(fields: [userMissionId], references: [id])
-
-  @@map("review")
 }

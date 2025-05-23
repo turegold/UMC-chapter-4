@@ -1,5 +1,5 @@
 import { prisma, pool } from "../db.config.js";
-import { NonExistentStoreError } from "../errors.js";
+import { NonExistentStoreError, InvalidUser } from "../errors.js";
 // 유저 데이터 삽입
 export const addUser = async (data) => {
     const user = await prisma.user.findFirst({ where: { phone_number: data.phone_number } });
@@ -32,6 +32,7 @@ export const insertStoretoDB = async (data) => {
 // 가게 정보 얻기
 export const getStorefromDB = async (storeId) => {
     const store = await prisma.store.findFirst({ where: { id: storeId } });
+    console.log(store)
     if (!store) {
         throw new NonExistentStoreError("존재하지 않는 가게입니다.");
     }
@@ -41,6 +42,23 @@ export const getStorefromDB = async (storeId) => {
         ownerId: store.ownerId.toString(),
     };
 };
+
+export const patchUserInfofromDB = async (email, updateData) => {
+    console.log(email)
+    console.log("업데이트할 데이터:", updateData);
+    const user = await prisma.user.findFirst({
+        where: { email: email },
+    });
+    if (!user) {
+        throw new InvalidUser("유저가 존재하지 않습니다.");
+    }
+    const updatedUser = await prisma.user.update({
+        where: { email },
+        data: updateData,
+    });
+
+    return updatedUser;
+}
 
 
 
